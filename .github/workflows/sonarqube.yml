@@ -1,0 +1,49 @@
+name: Sonarqube
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  sonarqube-analysis:
+    runs-on: ubuntu-latest
+    services:
+      sonarqube:
+        image: sonarqube
+        ports:
+          - 9000:9000
+        options: >-
+          --health-cmd "curl --fail http://localhost:9000 || exit 1"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK 11
+        uses: actions/setup-java@v2
+        with:
+          java-version: '11'
+          distribution: 'adopt'
+
+      - name: Wait for SonarQube to be ready
+        run: |
+          until $(curl --output /dev/null --silent --head --fail http://localhost:9000); do
+              printf '.'
+              sleep 5
+          done
+
+      - name: Run SonarQube analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: "http://localhost:9000"
+        run: |
+          ./gradlew sonarqube \
+            -Dsonar.projectKey=my-project-key \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.login=$SONAR_TOKEN
+
+    # ... rest of your jobs like building and deploying
