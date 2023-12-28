@@ -39,9 +39,11 @@ jobs:
       - name: Create SonarQube Project and Generate Token
         run: |
           # Create a project
+          echo curl -X POST -u admin:admin "http://localhost:9000/api/projects/create?name=todoapp&project=todoapp_key"
           curl -X POST -u admin:admin "http://localhost:9000/api/projects/create?name=todoapp&project=todoapp_key"
           
           # Generate a token
+          echo $(curl -X POST -u admin:admin "http://localhost:9000/api/user_tokens/generate?name=todoapp_token" | jq -r .token)
           TOKEN=$(curl -X POST -u admin:admin "http://localhost:9000/api/user_tokens/generate?name=todoapp_token" | jq -r .token)
           
           # Set the token as an environment variable for later steps
@@ -52,7 +54,7 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: "http://localhost:9000"
         run: |
-          ./gradlew sonarqube \
+          ./gradlew sonar \
             -Dsonar.projectKey=todoapp_key \
             -Dsonar.host.url=$SONAR_HOST_URL \
             -Dsonar.login=$SONAR_TOKEN
