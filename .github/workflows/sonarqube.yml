@@ -49,6 +49,23 @@ jobs:
           # Set the token as an environment variable for later steps
           echo "SONAR_TOKEN=$TOKEN" >> $GITHUB_ENV
 
+      - name: Lopo
+        run: |
+          sleep 15s
+
+      - name: Create SonarQube Project and Generate Token
+        run: |
+          # Create a project
+          echo curl -X POST -u admin:admin "http://localhost:9000/api/projects/create?name=todoapp&project=todoapp_key"
+          curl -X POST -u admin:admin "http://localhost:9000/api/projects/create?name=todoapp&project=todoapp_key"
+          
+          # Generate a token
+          echo $(curl -X POST -u admin:admin "http://localhost:9000/api/user_tokens/generate?name=todoapp_token" | jq -r .token)
+          TOKEN=$(curl -X POST -u admin:admin "http://localhost:9000/api/user_tokens/generate?name=todoapp_token" | jq -r .token)
+          
+          # Set the token as an environment variable for later steps
+          echo "SONAR_TOKEN=$TOKEN" >> $GITHUB_ENV
+
       - name: Run SonarQube analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
